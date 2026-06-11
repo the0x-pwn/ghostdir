@@ -3,17 +3,29 @@ import requests
 import sys
 import os
 import argparse
+import time
+import urllib3
+
 # color
 RED = "\033[0;31m"
 GREEN = "\033[0;32m"
 DARK_GRAY = "\033[1;30m"
+CYAN = "\033[1;36m"
+YELLOW = "\033[1;33m"
 END = "\033[0m"
 
 session = requests.Session()
 count = 0
 time_out = 0
 connection_error = 0
-parse = argparse.ArgumentParser()
+delay = 0
+
+parse = argparse.ArgumentParser(
+    prog='GhostDir',
+    description='Directory & File Discovery Tool',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+)
+
 parse.add_argument('-u','--url',required=True,metavar="This flag takes the target value",type=str)
 parse.add_argument('-w','--wordlist',required=True,type=str,metavar="This flag takes on the value of the brute force list")
 parse.add_argument('--timeout',required=False,default=5,type=int,metavar="This flag takes a numerical value to determine the delay time")
@@ -21,6 +33,8 @@ parse.add_argument('-t','--threads',required=False,type=int,default=30,metavar="
 parse.add_argument('-fc',required=False,default=None,type=lambda x : [int(i) for i in x.split(',')],metavar="This flag takes value by taking unwanted responses")
 parse.add_argument('-fs',required=False,default=None,type=lambda x: [int(i) for i in x.split(',')],metavar="This flag takes a value that represents the size of the pages that are not desired to be displayed")
 parse.add_argument('-H',required=False,type=str,metavar="This flag takes the cost of adding a header upon request")
+parse.add_argument('--proxy', default=None,required=False,type=str,help='Route requests through a proxy (e.g. Burp Suite)')
+parse.add_argument('--mode', required=False,type=str,choices=['burp', 'fast'],default='fast',help='Run mode: burp (slow) or fast (full speed)')
 arg = parse.parse_args()
 
 url = arg.url
@@ -29,6 +43,8 @@ timeout = arg.timeout
 threads = arg.threads
 filter_code = arg.fc
 filter_size = arg.fs
+proxy = arg.proxy
+mode = arg.mode
 header = arg.H
 headers = {}
 
@@ -38,6 +54,25 @@ if header:
             continue
         key,value = h.split(':',1)
         headers[key.strip()] = value.strip()
+
+
+proxies = None
+if proxy is not None:
+    proxies = {
+        "http" : proxy,
+        "https" : proxy
+    }
+
+if mode == 'burp':
+    threads = 3
+    timeout = max(timeout, 10)
+    delay = 0.1
+elif mode == "fast":
+    threads = min(threads, 50) 
+
+if mode == "burp":
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 # check url
 def check_url():
     global url
@@ -70,14 +105,24 @@ def request(url, word):
     count += 1
     full_path = f"{url}/{word.strip()}"
 
+    if delay:
+        time.sleep(delay)
+    
     try:
         response = session.get(
             url=full_path,
             headers=headers,
             timeout=timeout,
-            allow_redirects=True
+            allow_redirects=True,
+            proxies=proxies,
+            verify=False
         )
+        # burp suite
+        if mode == "burp":
+            print('\n')
+            print(f"[BURP] {response.request.method} {full_path} -> {response.status_code}",flush=True)
 
+        
 
         if filter_size is not None and len(response.content) in filter_size:
             return
@@ -105,7 +150,46 @@ def request(url, word):
         time_out += 1
     
 
+
+def banner():
+    print(rf"""{CYAN}
+
+ ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗██████╗ ██╗██████╗
+██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝██╔══██╗██║██╔══██╗
+██║  ███╗███████║██║   ██║███████╗   ██║   ██║  ██║██║██████╔╝
+██║   ██║██╔══██║██║   ██║╚════██║   ██║   ██║  ██║██║██╔══██╗
+╚██████╔╝██║  ██║╚██████╔╝███████║   ██║   ██████╔╝██║██║  ██║
+ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚═════╝ ╚═╝╚═╝  ╚═╝
+
+{GREEN}            GhostDir v1.0{END}
+{YELLOW}      Directory & File Discovery Tool{END}
+
+{CYAN}══════════════════════════════════════════════════════════════{END}
+
+{GREEN}[TARGET]{END}     {url}
+{GREEN}[WORDLIST]{END}   {wordlist}
+{GREEN}[THREADS]{END}    {threads}
+{GREEN}[TIMEOUT]{END}    {timeout}s
+{GREEN}[FILTER CODE]{END} {filter_code}
+{GREEN}[FILTER SIZE]{END} {filter_size}
+{GREEN}[MODE]{END} {mode}
+{GREEN}[PROXY]{END} {proxy}
+
+{CYAN}══════════════════════════════════════════════════════════════{END}
+
+""")
+    
+banner()
+
+print('\n')
 with open(wordlist,'r',encoding='latin-1') as words:
         with ThreadPoolExecutor(max_workers=threads) as ex:
             for word in words:
                 ex.submit(request,url,word)
+
+
+
+
+
+
+
