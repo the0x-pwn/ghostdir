@@ -27,9 +27,7 @@ It supports proxy routing (Burp Suite compatible), status filtering, response si
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/yourusername/GhostDir.git
-cd GhostDir
-pip install -r requirements.txt
+https://github.com/the0x-pwn/pro_py.git
 ```
 
 ### Requirements
