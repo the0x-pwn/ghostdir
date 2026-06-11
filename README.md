@@ -33,7 +33,12 @@ https://github.com/the0x-pwn/pro_py.git
 ### Requirements
 
 ```txt
+concurrent.futures
 requests
+sys
+os
+argparse
+time
 urllib3
 ```
 
