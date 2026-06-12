@@ -205,7 +205,7 @@ def banner():
 {GREEN}[METHOD]{END}   {method}
 {GREEN}[THREADS]{END}    {threads}
 {GREEN}[TIMEOUT]{END}    {timeout}s
-{GREEN}[HEADERS]{END}    {headers}
+{GREEN}[HEADERS]{END}    {', '.join(f'{k}: {v}' for k, v in headers.items()) if headers else 'None'}
 {GREEN}[FILTER CODE]{END} {filter_code}
 {GREEN}[FILTER SIZE]{END} {filter_size}
 {GREEN}[MODE]{END} {mode}
