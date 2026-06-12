@@ -16,7 +16,8 @@
 ![Version](https://img.shields.io/badge/Version-1.0-red?style=flat-square)
 
 *By Ali Waled*
-
+</div>
+![GhostDir Demo](preview.png)
 </div>
 
 ---
