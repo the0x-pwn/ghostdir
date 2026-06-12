@@ -44,6 +44,7 @@ parse.add_argument('--proxy',metavar="PROXY", default=None,required=False,type=s
 parse.add_argument('--mode', metavar="MODE",default=None,required=False,type=str,choices=['burp'],help='Run mode: burp (slow)')
 arg = parse.parse_args()
 
+# Variable
 url = arg.url
 wordlist = arg.wordlist
 timeout = arg.T
@@ -56,15 +57,7 @@ method = arg.X.upper()
 header = arg.H
 headers = {}
 
-
-
-
-if mode == 'burp':
-    threads = 3
-    timeout = max(timeout, 10)
-    delay = 0.1
-
-# check url
+# check target
 def check_url():
     global url
     global session
@@ -73,7 +66,6 @@ def check_url():
         sys.exit()
     if url.endswith('/'):
         url = url[:-1]
-
     return url
 check_url()
 
@@ -85,6 +77,7 @@ def check_word_list():
         sys.exit()
 check_word_list()
 
+# check method
 def check_method(x):
     ALLOWED_METHODS = ['GET', 'POST', 'HEAD', 'OPTIONS', 'PUT', 'DELETE', 'PATCH']
     if method not in ALLOWED_METHODS:
@@ -92,7 +85,7 @@ def check_method(x):
         sys.exit()
 check_method(method)
 
-
+# check headers
 def check_header(header_user,stor_header):
     if header_user:
         for h in header_user.split(','):
@@ -102,7 +95,7 @@ def check_header(header_user,stor_header):
             stor_header[key.strip()] = value.strip()
 check_header(header,headers)
 
-
+# burp
 proxies = None
 def check_proxy(proxy):
     global proxies
@@ -113,7 +106,7 @@ def check_proxy(proxy):
         }
 check_proxy(proxy)
 
-
+# page size
 def format_size(size):
     if size < 1024:
         return f"{DARK_GRAY}{size} B{END}"
@@ -123,7 +116,12 @@ def format_size(size):
         return f"{YELLOW}{size / (1024 ** 2):.2f} MB{END}"
     else:
         return f"{RED}{size / (1024 ** 3):.2f} GB{END}"
-    
+
+# check mode 
+if mode == 'burp':
+    threads = 3
+    timeout = max(timeout, 10)
+    delay = 0.1
 
 def request(url, word):
     global session
