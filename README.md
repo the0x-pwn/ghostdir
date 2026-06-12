@@ -47,7 +47,6 @@ It helps penetration testers and security researchers discover hidden paths on w
 ```bash
 git clone https://github.com/the0x-pwn/ghostdir.git
 cd ghostdir
-python gdir.py u- <URL> -w <WORDLIST> [OPTIONS]
 ```
 
 **requirements.txt**
