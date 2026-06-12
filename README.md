@@ -44,7 +44,7 @@ It helps penetration testers and security researchers discover hidden paths on w
 ## 🔧 Installation
 
 ```bash
-git clone https://github.com/yourname/ghostdir.git
+git clone https://github.com/the0x-pwn/pro_py.git
 cd ghostdir
 pip install -r requirements.txt
 ```
@@ -60,7 +60,7 @@ urllib3
 ## 🚀 Usage
 
 ```bash
-python ghostdir.py -u <URL> -w <WORDLIST> [OPTIONS]
+python gdir.py -u <URL> -w <WORDLIST> [OPTIONS]
 ```
 
 ### Options
@@ -84,42 +84,42 @@ python ghostdir.py -u <URL> -w <WORDLIST> [OPTIONS]
 
 **Basic scan:**
 ```bash
-python ghostdir.py -u https://example.com -w /usr/share/wordlists/dirb/common.txt
+python gdir.py -u https://example.com -w /usr/share/wordlists/dirb/common.txt
 ```
 
 **Increase threads for faster scan:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -t 60
+python gdir.py -u https://example.com -w wordlist.txt -t 60
 ```
 
 **Use POST method:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -X POST
+python gdir.py -u https://example.com -w wordlist.txt -X POST
 ```
 
 **Filter out 404 responses:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -fc 404
+python gdir.py -u https://example.com -w wordlist.txt -fc 404
 ```
 
 **Filter out specific page sizes (e.g. default error pages):**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -fs 1024,2048
+python gdir.py -u https://example.com -w wordlist.txt -fs 1024,2048
 ```
 
 **Add custom headers:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -H "Authorization:Bearer token123,X-Custom:value"
+python gdir.py -u https://example.com -w wordlist.txt -H "Authorization:Bearer token123,X-Custom:value"
 ```
 
 **Route through Burp Suite proxy:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt --proxy http://127.0.0.1:8080 --mode burp
+python gdir.py -u https://example.com -w wordlist.txt --proxy http://127.0.0.1:8080 --mode burp
 ```
 
 **Full example:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -t 50 -T 15 -X GET -fc 404,400 -fs 239 --proxy http://127.0.0.1:8080
+python gdir.py -u https://example.com -w wordlist.txt -t 50 -T 15 -X GET -fc 404,400 -fs 239 --proxy http://127.0.0.1:8080
 ```
 
 ---
