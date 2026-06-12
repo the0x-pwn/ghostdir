@@ -61,6 +61,7 @@ python ghostdir.py -u https://example.com -w wordlist.txt
 | `-u`, `--url`      | Target URL (required)                                         |
 | `-w`, `--wordlist` | Path to wordlist file (required)                              |
 | `--timeout`        | Request timeout (default: 10s)                                |
+| `-X`        | HTTP method to use (GET, POST, HEAD, OPTIONS, PUT, DELETE, PATCH) (default: GET)                                |
 | `-t`, `--threads`  | Number of threads (default: 30)                               |
 | `-fc`              | Filter HTTP status codes (e.g. 404,403)                       |
 | `-fs`              | Filter response sizes (e.g. 1024,2048)                        |
