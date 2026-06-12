@@ -1,215 +1,152 @@
+<div align="center">
 
----
-
-# GhostDir
-
-**GhostDir** is a high-performance directory and file discovery tool written in Python, designed for fast and flexible web content enumeration using multi-threading and advanced filtering options.
-
-It supports proxy routing (Burp Suite compatible), status filtering, response size filtering, and multiple operational modes for speed or debugging.
-
----
-
-## 🚀 Features
-
-* ⚡ Multi-threaded scanning using `ThreadPoolExecutor`
-* 🔥 Fast mode for high-speed brute forcing
-* 🐢 Burp mode for controlled debugging and traffic inspection
-* 🎯 Status code filtering (`-fc`)
-* 📦 Response size filtering (`-fs`)
-* 🌐 Proxy support (Burp Suite / custom proxies)
-* ⏱ Adjustable timeout handling
-* 🧾 Custom HTTP headers support
-* 📊 Live request monitoring (requests sent / errors / timeout tracking)
-* 🧠 Smart response validation (filters false positives)
-
----
-
-## 📦 Installation
-
-```bash
-https://github.com/the0x-pwn/pro_py.git
+```
+ ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗██████╗ ██╗██████╗
+██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝██╔══██╗██║██╔══██╗
+██║  ███╗███████║██║   ██║███████╗   ██║   ██║  ██║██║██████╔╝
+██║   ██║██╔══██║██║   ██║╚════██║   ██║   ██║  ██║██║██╔══██╗
+╚██████╔╝██║  ██║╚██████╔╝███████║   ██║   ██████╔╝██║██║  ██║
+ ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝   ╚═════╝ ╚═╝╚═╝  ╚═╝
 ```
 
-### Requirements
+**GhostDir** — Directory & File Discovery Tool
 
-```txt
-concurrent.futures
+![Python](https://img.shields.io/badge/Python-3.x-blue?style=flat-square&logo=python)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.0-red?style=flat-square)
+
+*By Ali Waled*
+
+</div>
+
+---
+
+## 📌 Description
+
+GhostDir is a fast and lightweight directory and file brute-force tool written in Python.  
+It helps penetration testers and security researchers discover hidden paths on web servers using a wordlist.
+
+---
+
+## ⚡ Features
+
+- Multi-threaded scanning for high speed
+- Custom HTTP method support (GET, POST, HEAD, etc.)
+- Filter results by status code or response size
+- Custom headers support
+- Proxy support (Burp Suite / MITM)
+- Burp mode for slow, controlled scanning
+- Color-coded output for easy reading
+- Human-readable response sizes (B, KB, MB, GB)
+
+---
+
+## 🔧 Installation
+
+```bash
+git clone https://github.com/yourname/ghostdir.git
+cd ghostdir
+pip install -r requirements.txt
+```
+
+**requirements.txt**
+```
 requests
-sys
-os
-argparse
-time
 urllib3
 ```
 
 ---
 
-## ⚙️ Usage
-
-### Basic Usage
+## 🚀 Usage
 
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt
+python ghostdir.py -u <URL> -w <WORDLIST> [OPTIONS]
 ```
 
----
+### Options
 
-## 🧩 Arguments
-
-| Flag               | Description                                                   |
-| ------------------ | ------------------------------------------------------------- |
-| `-u`, `--url`      | Target URL (required)                                         |
-| `-w`, `--wordlist` | Path to wordlist file (required)                              |
-| `--timeout`        | Request timeout (default: 10s)                                |
-| `-X`        | HTTP method to use (GET, POST, HEAD, OPTIONS, PUT, DELETE, PATCH) (default: GET)                                |
-| `-t`, `--threads`  | Number of threads (default: 30)                               |
-| `-fc`              | Filter HTTP status codes (e.g. 404,403)                       |
-| `-fs`              | Filter response sizes (e.g. 1024,2048)                        |
-| `-H`               | Custom HTTP headers (e.g. `User-Agent:xxx,Authorization:yyy`) |
-| `--proxy`          | Proxy support (e.g. Burp Suite `http://127.0.0.1:8080`)       |
-| `--mode`           | Execution mode: `fast` or `burp`                              |
+| Flag | Description | Default |
+|------|-------------|---------|
+| `-u`, `--url` | Target URL | Required |
+| `-w`, `--wordlist` | Path to wordlist file | Required |
+| `-X` | HTTP method (GET, POST, HEAD, OPTIONS, PUT, DELETE, PATCH) | `GET` |
+| `-t`, `--threads` | Number of threads | `30` |
+| `-T` | Request timeout in seconds | `10` |
+| `-fc` | Filter by status code (comma-separated) | None |
+| `-fs` | Filter by response size in bytes (comma-separated) | None |
+| `-H` | Custom headers (e.g. `Key:Value,Key2:Value2`) | None |
+| `--proxy` | Proxy URL (e.g. `http://127.0.0.1:8080`) | None |
+| `--mode` | Run mode: `burp` (slow, 3 threads) | None |
 
 ---
 
-## ⚡ Modes
+## 📖 Examples
 
-### 🔥 Fast Mode (Default)
-
-Optimized for maximum speed:
-
+**Basic scan:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt --mode fast
+python ghostdir.py -u https://example.com -w /usr/share/wordlists/dirb/common.txt
 ```
 
-* Higher thread count (up to 50)
-* Minimal delay
-* Best for large wordlists
-
----
-
-### 🐢 Burp Mode
-
-Optimized for traffic analysis in Burp Suite:
-
+**Increase threads for faster scan:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt --mode burp --proxy http://127.0.0.1:8080
+python ghostdir.py -u https://example.com -w wordlist.txt -t 60
 ```
 
-* Reduced threads (3)
-* Added delay between requests
-* Enhanced visibility in proxy tools
-
----
-
-## 🔍 Filtering Examples
-
-### Filter Status Codes
-
-Ignore 404 and 403 responses:
-
+**Use POST method:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -fc 404,403
+python ghostdir.py -u https://example.com -w wordlist.txt -X POST
 ```
 
----
-
-### Filter Response Sizes
-
-Ignore responses of specific sizes:
-
+**Filter out 404 responses:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -fs 0,1254
+python ghostdir.py -u https://example.com -w wordlist.txt -fc 404
 ```
 
----
-
-## 🧪 Custom Headers
-
+**Filter out specific page sizes (e.g. default error pages):**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt -H "User-Agent:Mozilla/5.0,Authorization:Bearer TOKEN"
+python ghostdir.py -u https://example.com -w wordlist.txt -fs 1024,2048
 ```
 
----
-
-## 🌐 Proxy Support (Burp Suite)
-
+**Add custom headers:**
 ```bash
-python ghostdir.py -u https://example.com -w wordlist.txt --proxy http://127.0.0.1:8080
+python ghostdir.py -u https://example.com -w wordlist.txt -H "Authorization:Bearer token123,X-Custom:value"
+```
+
+**Route through Burp Suite proxy:**
+```bash
+python ghostdir.py -u https://example.com -w wordlist.txt --proxy http://127.0.0.1:8080 --mode burp
+```
+
+**Full example:**
+```bash
+python ghostdir.py -u https://example.com -w wordlist.txt -t 50 -T 15 -X GET -fc 404,400 -fs 239 --proxy http://127.0.0.1:8080
 ```
 
 ---
 
-## 📊 Output Example
+## 🖥️ Output Example
 
 ```
-[+] admin [Status: 200] [Size: 5321 B]
-[+] backup [Status: 301] [Size: 0 B]
-[+] login [Status: 200] [Size: 2210 B]
+[+] admin       [Status: 200] [Size: 1.79 KB]
+[+] .htaccess   [Status: 403] [Size: 239 B]
+[+] api         [Status: 200] [Size: 86.91 KB]
+[+] login       [Status: 200] [Size: 4.20 KB]
+
+[*] Scan completed in 12.43s
+[*] Total requests: 4614 | Found: 4
 ```
-
----
-
-## 📈 Live Statistics
-
-During execution, GhostDir displays:
-
-* Total requests sent
-* Timeout errors
-* Connection errors
-* Found paths count
 
 ---
 
 ## ⚠️ Disclaimer
 
-This tool is intended for:
-
-* Security research
-* Penetration testing (with authorization)
-* Educational purposes
-
-❗ Unauthorized scanning of systems you do not own or have permission to test is illegal. The developer is not responsible for any misuse of this tool.
+This tool is intended for **authorized security testing only**.  
+Do not use against systems you do not own or have explicit permission to test.  
+The author is not responsible for any misuse or damage caused by this tool.
 
 ---
 
-## 🧠 How It Works
+## 👤 Author
 
-GhostDir performs:
-
-1. Reads wordlist entries
-2. Appends each word to target URL
-3. Sends HTTP GET requests using multi-threading
-4. Filters responses based on:
-
-   * Status code
-   * Response size
-5. Displays valid endpoints in real time
-
----
-
-## 🛠 Example Workflow
-
-```bash
-python ghostdir.py \
--u https://target.com \
--w wordlist.txt \
--t 30 \
---timeout 10 \
--fc 404 \
---mode fast
-```
-
----
-
-## 🔥 Performance Tips
-
-* Use `fast` mode for large wordlists
-* Use `burp` mode for debugging requests
-* Combine `-fc 404` to reduce noise
-* Use proxy only when needed (it slows requests)
-
----
-
-## 📌 Author
-
-**Ali Waled**
+**Ali Waled**  
+Made with ❤️ for the security community.
