@@ -23,7 +23,6 @@ count = 0
 time_out = 0
 connection_error = 0
 delay = 0
-found = 0
 lock_loop = Lock()
 
 parse = argparse.ArgumentParser(
@@ -36,12 +35,13 @@ parse.add_argument('-u','--url',metavar="URL",required=True,help="This flag take
 parse.add_argument('-w','--wordlist',metavar="WORDLIST",required=True,type=str,help="This flag takes on the value of the brute force list")
 parse.add_argument('-X', metavar="METHOD", required=False, default='GET', type=str, help="HTTP method to use (GET, POST, HEAD, OPTIONS, PUT, DELETE, PATCH)")
 parse.add_argument('-T',metavar="TIMEOUT",required=False,default=10,type=int,help="This flag takes a numerical value to determine the delay time")
-parse.add_argument('-t','--threads',metavar='THREADS',required=False,type=int,default=30,help="This flag takes into account the speed at which orders are sent")
+parse.add_argument('-t','--threads',metavar='THREADS',required=False,type=int,default=10,help="This flag takes into account the speed at which orders are sent")
 parse.add_argument('-fc',metavar="FILTER CODE",required=False,default=None,type=lambda x : [int(i) for i in x.split(',')],help="This flag takes value by taking unwanted responses")
 parse.add_argument('-fs',metavar="FILTER SIZE",required=False,default=None,type=lambda x: [int(i) for i in x.split(',')],help="This flag takes a value that represents the size of the pages that are not desired to be displayed")
 parse.add_argument('-H',metavar="HEADERS",required=False,type=str,help="This flag takes the cost of adding a header upon request")
 parse.add_argument('--proxy',metavar="PROXY", default=None,required=False,type=str,help='Route requests through a proxy (e.g. Burp Suite)')
 parse.add_argument('--mode', metavar="MODE",default=None,required=False,type=str,choices=['burp'],help='Run mode: burp (slow)')
+parse.add_argument('-o',default=None,metavar="OUTPUT",required=False,type=str,help="Save discovered results to a file (e.g. results.txt)")
 arg = parse.parse_args()
 
 # Variable
@@ -56,6 +56,8 @@ mode = arg.mode
 method = arg.X.upper()
 header = arg.H
 headers = {}
+output = arg.o
+file_output = []
 
 # check target
 def check_url():
@@ -68,6 +70,8 @@ def check_url():
         url = url[:-1]
     return url
 check_url()
+
+
 
 # check file
 def check_word_list():
@@ -128,10 +132,7 @@ def request(url, word):
     global count
     global connection_error
     global time_out
-    global found
     status_code = [200, 201, 204, 301, 302, 307, 403, 405, 500]
-    with lock_loop:
-        count += 1
     full_path = f"{url}/{word.strip()}"
 
     if delay:
@@ -148,6 +149,9 @@ def request(url, word):
             verify=False
         )
 
+        with lock_loop:
+            count += 1
+
         if filter_size is not None and len(response.content) in filter_size:
             return
 
@@ -155,7 +159,9 @@ def request(url, word):
             return
 
         if response.status_code in status_code and len(response.content) > 0:
-            found += 1
+            if output:
+                with lock_loop:
+                    file_output.append(f"{full_path}\n")
             with lock_loop:
                 print(f"\r{' ' * 100}\r{GREEN}[+] {word.strip()} [Status: {BLUE}{response.status_code}{END}] [Size: {BLUE}{format_size(len(response.content))}{END}]{END}")
         else:
@@ -196,23 +202,55 @@ def banner():
 {GREEN}            GhostDir v1.0{END}
 {YELLOW}      Directory & File Discovery Tool{END}
 
-{CYAN}══════════════════════════════════════════════════════════════{END}
-
-{GREEN}[TARGET]{END}     {url}
-{GREEN}[WORDLIST]{END}   {wordlist}
-{GREEN}[METHOD]{END}   {method}
-{GREEN}[THREADS]{END}    {threads}
-{GREEN}[TIMEOUT]{END}    {timeout}s
-{GREEN}[HEADERS]{END}    {', '.join(f'{k}: {v}' for k, v in headers.items()) if headers else 'None'}
-{GREEN}[FILTER CODE]{END} {filter_code}
-{GREEN}[FILTER SIZE]{END} {filter_size}
-{GREEN}[MODE]{END} {mode}
-{GREEN}[PROXY]{END} {proxy}
-
-{CYAN}══════════════════════════════════════════════════════════════{END}
+{CYAN}══════════════════════════════════════════════════════════════════════════════════{END}
+{CYAN}[TARGET]{END}      {url}
+{CYAN}[WORDLIST]{END}    {wordlist}
+{CYAN}[METHOD]{END}      {method}
+{CYAN}[THREADS]{END}     {threads}
+{CYAN}[TIMEOUT]{END}     {timeout}s
+{CYAN}[HEADERS]{END}     {', '.join(f'{k}: {v}' for k, v in headers.items()) if headers else 'None'}
+{CYAN}[FILTER CODE]{END} {filter_code}
+{CYAN}[FILTER SIZE]{END} {filter_size}
+{CYAN}[MODE]{END}        {mode}
+{CYAN}[PROXY]{END}       {proxy}
+{CYAN}[OUTPUT]{END}      {output}
+{CYAN}══════════════════════════════════════════════════════════════════════════════════{END}
 """)
     
 banner()
+
+# checking target
+def check_target(url):
+    global session
+    print(f"{CYAN}[+] Checking target: {url}{END}")
+
+    try:
+        response = session.get(
+            url,
+            timeout=10,
+            allow_redirects=True,
+            verify=False
+        )
+
+        print(
+            f"{CYAN}[+] Target is alive "
+            f"[Status: {response.status_code}]{END}"
+        )
+
+        return True
+    
+    except requests.exceptions.ConnectionError:
+        print(f"{RED}[-] Connection error: target appears unreachable{END}")
+        sys.exit()
+
+    except requests.exceptions.Timeout:
+        print(f"{RED}[-] Request timed out{END}")
+        sys.exit()
+
+    except requests.exceptions.RequestException as e:
+        print(f"{RED}[-] Error: {e}{END}")
+        sys.exit()
+check_target(url)
 
 
 with open(wordlist,'r',encoding='latin-1') as words:
@@ -220,14 +258,15 @@ with open(wordlist,'r',encoding='latin-1') as words:
             for word in words:
                 ex.submit(request,url,word)
 
+
 end = time.perf_counter()
 elapsed = end - start
 print(f"\n{CYAN}[*] Scan completed in {elapsed:.2f}s{END}")
-print(f"{CYAN}[*] Total requests: {count} | Found: {found}{END}")
+print(f"{CYAN}[*] Total requests: {count} | Found: {len(file_output)}{END}")
 
 
-
-
-
-
-
+# result loop
+if output and file_output:
+    with open(output, 'a', encoding='utf-8') as save:
+        for line in file_output:
+            save.write(line)
