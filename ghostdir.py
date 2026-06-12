@@ -41,7 +41,7 @@ arg = parse.parse_args()
 
 url = arg.url
 wordlist = arg.wordlist
-timeout = arg.timeout
+timeout = arg.T
 threads = arg.threads
 filter_code = arg.fc
 filter_size = arg.fs
