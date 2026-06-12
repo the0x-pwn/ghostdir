@@ -17,7 +17,7 @@
 
 *By Ali Waled*
 </div>
-![GhostDir Demo](preview.png)
+![GhostDir Demo](gdir.png)
 </div>
 
 ---
