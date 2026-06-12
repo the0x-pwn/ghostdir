@@ -139,7 +139,7 @@ python gdir.py -u https://example.com -w wordlist.txt -t 50 -T 15 -X GET -fc 404
 [+] api         [Status: 200] [Size: 86.91 KB]
 [+] login       [Status: 200] [Size: 4.20 KB]
 
-[*] Scan completed in 12.43s
+[*] Scan completed in 1.43s
 [*] Total requests: 4614 | Found: 4
 ```
 
