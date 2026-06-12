@@ -28,15 +28,15 @@ parse = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
 
-parse.add_argument('-u','--url',required=True,metavar="This flag takes the target value",type=str)
-parse.add_argument('-w','--wordlist',required=True,type=str,metavar="This flag takes on the value of the brute force list")
-parse.add_argument('--timeout',required=False,default=10,type=int,metavar="This flag takes a numerical value to determine the delay time")
-parse.add_argument('-t','--threads',required=False,type=int,default=30,metavar="This flag takes into account the speed at which orders are sent")
-parse.add_argument('-fc',required=False,default=None,type=lambda x : [int(i) for i in x.split(',')],metavar="This flag takes value by taking unwanted responses")
-parse.add_argument('-fs',required=False,default=None,type=lambda x: [int(i) for i in x.split(',')],metavar="This flag takes a value that represents the size of the pages that are not desired to be displayed")
-parse.add_argument('-H',required=False,type=str,metavar="This flag takes the cost of adding a header upon request")
-parse.add_argument('--proxy', default=None,required=False,type=str,help='Route requests through a proxy (e.g. Burp Suite)')
-parse.add_argument('--mode', required=False,type=str,choices=['burp', 'fast'],default='fast',help='Run mode: burp (slow) or fast (full speed)')
+parse.add_argument('-u','--url',metavar="URL",required=True,help="This flag takes the target value",type=str)
+parse.add_argument('-w','--wordlist',metavar="WORDLIST",required=True,type=str,help="This flag takes on the value of the brute force list")
+parse.add_argument('-T',metavar="TIMEOUT",required=False,default=10,type=int,help="This flag takes a numerical value to determine the delay time")
+parse.add_argument('-t','--threads',metavar='THREADS',required=False,type=int,default=30,help="This flag takes into account the speed at which orders are sent")
+parse.add_argument('-fc',metavar="FILTER CODE",required=False,default=None,type=lambda x : [int(i) for i in x.split(',')],help="This flag takes value by taking unwanted responses")
+parse.add_argument('-fs',metavar="FILTER SIZE",required=False,default=None,type=lambda x: [int(i) for i in x.split(',')],help="This flag takes a value that represents the size of the pages that are not desired to be displayed")
+parse.add_argument('-H',metavar="HEADERS",required=False,type=str,help="This flag takes the cost of adding a header upon request")
+parse.add_argument('--proxy',metavar="PROXY", default=None,required=False,type=str,help='Route requests through a proxy (e.g. Burp Suite)')
+parse.add_argument('--mode', metavar="MODE",required=False,type=str,choices=['burp', 'fast'],default='fast',help='Run mode: burp (slow) or fast (full speed)')
 arg = parse.parse_args()
 
 url = arg.url
