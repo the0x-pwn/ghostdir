@@ -136,6 +136,12 @@ python gdir.py -u https://example.com -w wordlist.txt -t 50 -T 15 -X GET -fc 404
 ```bash
 python gdir.py -u https://example.com -w wordlist.txt -ms "admin"
 ```
+
+**Filter by extensions:**
+```bash
+python gdir.py -u https://example.com -w wordlist.txt -e php
+python gdir.py -u https://example.com -w wordlist.txt -e php,html,asp
+```
 ---
 
 ## 🖥️ Output Example
