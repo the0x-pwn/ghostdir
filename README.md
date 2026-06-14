@@ -78,6 +78,8 @@ python gdir.py -u <URL> -w <WORDLIST> [OPTIONS]
 | `--proxy` | Proxy URL (e.g. `http://127.0.0.1:8080`) | None |
 | `--mode` | Run mode: `burp` (slow, 3 threads) | None |
 | `-o` | Save results to output file | None |
+| `-ms` | Match String (filter by response content) | None |
+| `-e` | Filter by file extensions (e.g. php, html, asp) | None |
 
 ---
 
@@ -128,6 +130,10 @@ python gdir.py -u https://example.com -w wordlist.txt -o results.txt
 python gdir.py -u https://example.com -w wordlist.txt -t 50 -T 15 -X GET -fc 404,400 -fs 239 --proxy http://127.0.0.1:8080
 ```
 
+**Filter by response content (Match String):**
+```bash
+python gdir.py -u https://example.com -w wordlist.txt -ms "admin"
+```
 ---
 
 ## 🖥️ Output Example
