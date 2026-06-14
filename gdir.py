@@ -42,6 +42,8 @@ parse.add_argument('-H',metavar="HEADERS",required=False,type=str,help="This fla
 parse.add_argument('--proxy',metavar="PROXY", default=None,required=False,type=str,help='Route requests through a proxy (e.g. Burp Suite)')
 parse.add_argument('--mode', metavar="MODE",default=None,required=False,type=str,choices=['burp'],help='Run mode: burp (slow)')
 parse.add_argument('-o',default=None,metavar="OUTPUT",required=False,type=str,help="Save discovered results to a file (e.g. results.txt)")
+parse.add_argument('-ms',metavar="Match String",required=False,default=None,type=str,help="String used for matching or filtering results")
+parse.add_argument('-e',metavar="EXTENSIONS",required=False,default=None,type=lambda x: [i.strip().lower() for i in x.split(',')],help="Filter by file extensions (e.g. php,html,asp)")
 arg = parse.parse_args()
 
 # Variable
@@ -57,6 +59,8 @@ method = arg.X.upper()
 header = arg.H
 headers = {}
 output = arg.o
+ms = arg.ms.lower() if arg.ms else None
+ext = arg.e
 file_output = []
 
 # check target
@@ -132,7 +136,9 @@ def request(url, word):
     global count
     global connection_error
     global time_out
+    is_filtered = False
     status_code = [200, 201, 204, 301, 302, 307, 403, 405, 500]
+
     full_path = f"{url}/{word.strip()}"
 
     if delay:
@@ -148,20 +154,27 @@ def request(url, word):
             proxies=proxies,
             verify=False
         )
-
+        #count 
         with lock_loop:
             count += 1
+    
+        text = response.text.lower() if response.text else ""
+        # Match String filter
+        if ms and ms not in text:
+            is_filtered = True
 
         if filter_size is not None and len(response.content) in filter_size:
-            return
+            is_filtered = True
+
 
         if filter_code is not None and response.status_code in filter_code:
-            return
+            is_filtered = True
 
-        if response.status_code in status_code and len(response.content) > 0:
-            if output:
-                with lock_loop:
-                    file_output.append(f"{full_path}\n")
+
+        if not is_filtered and response.status_code in status_code and len(response.content) > 0:
+            with lock_loop:
+                file_output.append(f"{full_path}\n")
+
             with lock_loop:
                 print(f"\r{' ' * 100}\r{GREEN}[+] {word.strip()} [Status: {BLUE}{response.status_code}{END}] [Size: {BLUE}{format_size(len(response.content))}{END}]{END}")
         else:
@@ -189,6 +202,24 @@ def request(url, word):
 
 
 def banner():
+    optional = ""
+    if headers:
+        optional += f"\n{CYAN}[HEADERS]{END}     :  {', '.join(f'{k}: {v}' for k, v in headers.items())}"
+    if filter_code:
+        optional += f"\n{CYAN}[FILTER CODE]{END} :  {','.join(f"{fc}" for fc in filter_code)}"
+    if filter_size:
+        optional += f"\n{CYAN}[FILTER SIZE]{END} :  {','.join(f"{fs}" for fs in filter_size)}"
+    if mode:
+        optional += f"\n{CYAN}[MODE]{END}        :  {mode}"
+    if proxy:
+        optional += f"\n{CYAN}[PROXY]{END}       :  {proxy}"
+    if output:
+        optional += f"\n{CYAN}[OUTPUT]{END}      :  {output}"
+    if ms:
+        optional += f"\n{CYAN}[MATCH STR]{END}   :  {ms}"
+    if ext:
+        optional += f"\n{CYAN}[EXTENSIONS]{END}  :  {','.join(ext)}"
+
     print(rf"""{CYAN}
 
  ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗██████╗ ██╗██████╗
@@ -206,18 +237,13 @@ def banner():
 {CYAN}[TARGET]{END}      :   {url}
 {CYAN}[WORDLIST]{END}    :  {wordlist}
 {CYAN}[METHOD]{END}      :  {method}
-{CYAN}[THREADS]{END}     :  {threads}
 {CYAN}[TIMEOUT]{END}     :  {timeout}s
-{CYAN}[HEADERS]{END}     :  {', '.join(f'{k}: {v}' for k, v in headers.items()) if headers else 'None'}
-{CYAN}[FILTER CODE]{END} :  {filter_code}
-{CYAN}[FILTER SIZE]{END} :  {filter_size}
-{CYAN}[MODE]{END}        :  {mode}
-{CYAN}[PROXY]{END}       :  {proxy}
-{CYAN}[OUTPUT]{END}      :  {output}
+{CYAN}[THREADS]{END}     :  {threads}{optional}
 {CYAN}══════════════════════════════════════════════════════════════════════════════════{END}
 """)
-    
 banner()
+
+
 
 # checking target
 def check_target(url):
@@ -253,10 +279,21 @@ def check_target(url):
 check_target(url)
 
 
-with open(wordlist,'r',encoding='latin-1') as words:
-        with ThreadPoolExecutor(max_workers=threads) as ex:
-            for word in words:
-                ex.submit(request,url,word)
+
+with open(wordlist, 'r', encoding='latin-1') as words:
+    word_list = [w.strip() for w in words if w.strip()]
+
+all_paths = []
+for word in word_list:
+    if ext is not None:
+        for e in ext:
+            all_paths.append(f"{word}.{e}")
+    else:
+        all_paths.append(word)
+
+with ThreadPoolExecutor(max_workers=threads) as ex:
+    for path in all_paths:
+        ex.submit(request, url, path)
 
 
 end = time.perf_counter()
@@ -265,8 +302,10 @@ print(f"\n{CYAN}[*] Scan completed in {elapsed:.2f}s{END}")
 print(f"{CYAN}[*] Total requests: {count} | Found: {len(file_output)}{END}")
 
 
+
+
 # result loop
-if output and file_output:
+if output:
     with open(output, 'a', encoding='utf-8') as save:
         for line in file_output:
             save.write(line)
