@@ -34,6 +34,8 @@ It helps penetration testers and security researchers discover hidden paths on w
 - Custom HTTP method support (GET, POST, HEAD, etc.)
 - Filter results by status code or response size
 - Custom headers support
+- Match string filtering (-ms)
+- Extension-based filtering (-e)
 - Proxy support (Burp Suite / MITM)
 - Burp mode for slow, controlled scanning
 - Color-coded output for easy reading
