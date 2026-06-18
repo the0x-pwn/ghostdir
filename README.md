@@ -39,6 +39,9 @@ It helps penetration testers and security researchers discover hidden paths on w
 - Proxy support (Burp Suite / MITM)
 - Burp mode for slow, controlled scanning
 - Color-coded output for easy reading
+- Custom User-Agent support
+- Random User-Agent rotation per request
+- Custom cookies support
 - Human-readable response sizes (B, KB, MB, GB)
 - Save results to output file
 
@@ -82,6 +85,9 @@ python gdir.py -u <URL> -w <WORDLIST> [OPTIONS]
 | `-o` | Save results to output file | None |
 | `-ms` | Match String (filter by response content) | None |
 | `-e` | Filter by file extensions (e.g. php, html, asp) | None |
+| `-A`, `--agent` | Specify a custom User-Agent string for HTTP requests | None |
+| `--random-agent` | Enable random User-Agent rotation for each request | `False` |
+| `--cookies` | Send custom cookies with requests (e.g. `session=abc123; user=admin`) | None |
 
 ---
 
@@ -143,6 +149,21 @@ python gdir.py -u https://example.com -w wordlist.txt -e php
 python gdir.py -u https://example.com -w wordlist.txt -e php,html,asp
 ```
 ---
+
+**Use a custom User-Agent:**
+```bash
+python gdir.py -u https://example.com -w wordlist.txt -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+```
+
+**Rotate a random User-Agent on every request:**
+```bash
+python gdir.py -u https://example.com -w wordlist.txt --random-agent
+```
+
+**Send custom cookies with requests:**
+```bash
+python gdir.py -u https://example.com -w wordlist.txt --cookies "session=abc123; user=admin"
+```
 
 ## 🖥️ Output Example
 
