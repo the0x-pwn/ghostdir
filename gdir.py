@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 import requests
 import sys
 import os
+import random
 import argparse
 import time
 import urllib3
@@ -17,6 +18,31 @@ CYAN = "\033[1;36m"
 YELLOW = "\033[1;33m"
 BLUE = "\033[0;34m"
 END = "\033[0m"
+
+#user-agent
+USER_AGENTS = [
+    "Mozilla/5.0 (Linux; Android 4.1; en-US; Nexus 7 Build/JRN84D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Safari/535.19",
+    "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36",
+    "Opera/9.80 (SpreadTrum; Opera Mini/4.4.31227/75.35; U; en) Presto/2.12.423 Version/12.16",
+    "Mozilla/5.0 (X11; Linux i686) KHTML/4.14.6 (like Gecko) Konqueror/4.14",
+    "iTunes/10.6 (Macintosh; Intel Mac OS X 10.8) AppleWebKit/531.21.8",
+    "Mozilla/5.0 (Linux; U; X11; en-US; Valve Steam Tenfoot/1535576546; ) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0",
+    "Mozilla/5.0 (Linux; Android 4.4.2; SPH-L710 Build/KOT49H) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/30.0.0.0 Mobile Safari/537.36",
+    "Opera/9.63 (X11; FreeBSD 7.1-RELEASE i386; U; en) Presto/2.1.1",
+    "Mozilla/5.0 (X11; U; Linux x86_64; en-us) AppleWebKit/534.35 (KHTML, like Gecko) Chrome/11.0.696.65 Safari/534.35 Puffin/2.9331AT",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.106 Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 6.0.1; Z833 Build/MMB29M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.91 Mobile Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.183 Safari/537.36 Vivaldi/1.96.1147.64",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15058",
+    "Mozilla/5.0 (PlayStation Vita 3.50) AppleWebKit/537.73 (KHTML, like Gecko) Silk/3.2",
+    "yacybot (/global; arm Linux 3.8.13.30; java 1.8.0_91; Europe/de) http://yacy.net/bot.html",
+    "UCWEB/2.0 (Symbian; U; S60 V3; en-US; NOKIAE5-00) U2/1.0.0 UCBrowser/9.0.1.317 U2/1.0.0 Mobile",
+    "UCWEB/2.0 (Java; U; MIDP-2.0; Nokia203/20.37) U2/1.0.0 UCBrowser/8.7.0.218 U2/1.0.0 Mobile",
+    "SM-B311V/1.0 UP.Browser/6.2.3.8 (GUI) MMP/2.0",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 9_3_2 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13F69"
+]
+
 
 session = requests.Session()
 count = 0
@@ -44,6 +70,9 @@ parse.add_argument('--mode', metavar="MODE",default=None,required=False,type=str
 parse.add_argument('-o',default=None,metavar="OUTPUT",required=False,type=str,help="Save discovered results to a file (e.g. results.txt)")
 parse.add_argument('-ms',metavar="Match String",required=False,default=None,type=str,help="String used for matching or filtering results")
 parse.add_argument('-e',metavar="EXTENSIONS",required=False,default=None,type=lambda x: [i.strip().lower() for i in x.split(',')],help="Filter by file extensions (e.g. php,html,asp)")
+parse.add_argument('-A','--agent',required=False,type=str,default=None,metavar="User Agent",help="Specify a custom User-Agent string for HTTP requests")
+parse.add_argument('--random-agent',required=False,action="store_true",help="Enable random User-Agent rotation for each request")
+parse.add_argument('--cookies',required=False,default=None,type=str,metavar="COOKIE_STRING",help="Send custom cookies with requests (e.g. session=abc123; user=admin)")
 arg = parse.parse_args()
 
 # Variable
@@ -57,6 +86,9 @@ proxy = arg.proxy
 mode = arg.mode
 method = arg.X.upper()
 header = arg.H
+user_agent = arg.agent
+random_agent = arg.random_agent
+cookie = arg.cookies
 headers = {}
 output = arg.o
 ms = arg.ms.lower() if arg.ms else None
@@ -95,6 +127,15 @@ check_method(method)
 
 # check headers
 def check_header(header_user,stor_header):
+
+    if user_agent:
+        headers['User-Agent'] = user_agent
+    elif random_agent:
+        headers['User-Agent'] = random.choice(USER_AGENTS)
+    
+    if cookie:
+        headers['Cookie'] = cookie
+
     if header_user:
         for h in header_user.split(','):
             if ':' not in h:
@@ -102,6 +143,7 @@ def check_header(header_user,stor_header):
             key,value = h.split(':',1)
             stor_header[key.strip()] = value.strip()
 check_header(header,headers)
+
 
 # burp
 proxies = None
@@ -173,7 +215,11 @@ def request(url, word):
 
         if not is_filtered and response.status_code in status_code and len(response.content) > 0:
             with lock_loop:
-                file_output.append(f"{full_path}\n")
+                file_output.append(
+                        f"[URL] {full_path}  "
+                        f"[STATUS] {response.status_code}  "
+                        f"[SIZE] {len(response.content)} bytes\n"
+                    )
 
             with lock_loop:
                 print(f"\r{' ' * 100}\r{GREEN}[+] {word.strip()} [Status: {BLUE}{response.status_code}{END}] [Size: {BLUE}{format_size(len(response.content))}{END}]{END}")
@@ -219,6 +265,8 @@ def banner():
         optional += f"\n{CYAN}[MATCH STR]{END}   :  {ms}"
     if ext:
         optional += f"\n{CYAN}[EXTENSIONS]{END}  :  {','.join(ext)}"
+    if cookie:
+        optional += f"\n{CYAN}[COOKIE]{END}      :  {cookie}"
 
     print(rf"""{CYAN}
 
@@ -234,7 +282,7 @@ def banner():
 {YELLOW}      Directory & File Discovery Tool{END}
 
 {CYAN}══════════════════════════════════════════════════════════════════════════════════{END}
-{CYAN}[TARGET]{END}      :   {url}
+{CYAN}[TARGET]{END}      :  {url}
 {CYAN}[WORDLIST]{END}    :  {wordlist}
 {CYAN}[METHOD]{END}      :  {method}
 {CYAN}[TIMEOUT]{END}     :  {timeout}s
