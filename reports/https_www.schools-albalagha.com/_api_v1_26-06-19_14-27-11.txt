@@ -1,0 +1,3 @@
+# Dirsearch started Fri Jun 19 14:27:33 2026 as: /usr/bin/dirsearch -u https://www.schools-albalagha.com/api/v1
+
+301     0B   https://www.schools-albalagha.com/api/v1/auth/login    -> REDIRECTS TO: /api/v1/auth/login/

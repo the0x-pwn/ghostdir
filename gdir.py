@@ -72,7 +72,7 @@ parse.add_argument('-o',default=None,metavar="OUTPUT",required=False,type=str,he
 parse.add_argument('-e',metavar="EXTENSIONS",required=False,default=None,type=lambda x: [i.strip().lower() for i in x.split(',')],help="Filter by file extensions (e.g. php,html,asp)")
 parse.add_argument('-ms',metavar="Match String",required=False,default=None,type=str,help="String used for matching or filtering results")
 parse.add_argument('--proxy',metavar="PROXY", default=None,required=False,type=str,help='Route requests through a proxy (e.g. Burp Suite)')
-parse.add_argument('--mode', metavar="MODE",default=None,required=False,type=str,choices=['burp'],help='Run mode: burp (slow)')
+parse.add_argument('--mode', metavar="MODE",default="burp",required=False,type=str,choices=['burp','fast'],help='Request rate mode: burp (3 requests/sec) or fast (10 requests/sec)')
 arg = parse.parse_args()
 
 # Variable
@@ -168,7 +168,7 @@ def format_size(size):
         return f"{RED}{size / (1024 ** 3):.2f} GB{END}"
 
 # check mode 
-if mode == 'burp':
+if proxy and mode == 'burp':
     threads = 3
     timeout = max(timeout, 10)
     delay = 0.1
